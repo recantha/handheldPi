@@ -4,6 +4,7 @@ import socket
 import math
 import commands
 import os
+import Adafruit_DHT
 
 from gpiozero import LED, Button
 
@@ -63,5 +64,11 @@ while True:
         for addr in ip_addresses:
             show_message(addr)
 
-        operation = 0
+        operation = 2
 
+    elif operation == 2:
+        # DHT11 on pin 23
+        humidity, temperature = Adafruit_DHT.read_retry(11, 23)
+        show_message('Temp {0:0.1f}C  Humid {1:0.1f}%'.format(temperature, humidity))
+
+        operation = 0
