@@ -5,6 +5,7 @@ import math
 import commands
 import os
 import Adafruit_DHT
+from wireless import Wireless
 
 from gpiozero import LED, Button
 
@@ -16,6 +17,8 @@ display.begin()
 blue_led = LED(24)
 shutdown_button = Button(11)
 low_battery = Button(10)
+
+wireless = Wireless()
 
 # Scroll a message across the display
 def show_message(message):
@@ -56,19 +59,27 @@ while True:
     if operation == 0:
         hostname = socket.gethostname()
         show_message(hostname)
-        operation = 1
+        operation+=1
 
     elif operation == 1:
+        current_ap = wireless.current()
+        show_message("Connected to %s" % current_ap)
+        operation+=1
+
+    elif operation == 2:
         ip_addresses = readIPaddresses()
 
         for addr in ip_addresses:
             show_message(addr)
 
-        operation = 2
+        operation+=1
 
-    elif operation == 2:
+    elif operation == 4:
         # DHT11 on pin 23
         humidity, temperature = Adafruit_DHT.read_retry(11, 23)
         show_message('Temp {0:0.1f}C  Humid {1:0.1f}%'.format(temperature, humidity))
 
+        operation += 1
+
+    else:
         operation = 0
