@@ -15,7 +15,7 @@ display = AlphaNum4.AlphaNum4()
 display.begin()
 
 blue_led = LED(24)
-shutdown_button = Button(11)
+button = Button(11)
 low_battery = Button(10)
 
 wireless = Wireless()
@@ -49,22 +49,36 @@ def shutdown():
     blue_led.off()
     os.system("sudo halt")
 
+def getCPUtemperature():
+    res = os.popen("vcgencmd measure_temp").readline()
+    temp_C = res.replace("temp=","").replace("'C\n", "")
+    temp_C = int(float(temp_C))
+    temp_F = round(9.0/5.0*temp_C+32)
+    temp_C = round(temp_C)
+
+    return temp_C, temp_F
+
+def increaseOperation():
+    global operation
+    operation += 1
+
+# Start conditions
 operation = 0
 
 blue_led.on()
-shutdown_button.when_pressed = shutdown
+hold_time = 5
+button.when_pressed = increaseOperation
+button.when_held = shutdown
 low_battery.when_pressed = shutdown
 
 while True:
     if operation == 0:
         hostname = socket.gethostname()
         show_message(hostname)
-        operation+=1
 
     elif operation == 1:
         current_ap = wireless.current()
         show_message("Connected to %s" % current_ap)
-        operation+=1
 
     elif operation == 2:
         ip_addresses = readIPaddresses()
@@ -72,14 +86,14 @@ while True:
         for addr in ip_addresses:
             show_message(addr)
 
-        operation+=1
-
-    elif operation == 4:
+    elif operation == 3:
         # DHT11 on pin 23
         humidity, temperature = Adafruit_DHT.read_retry(11, 23)
         show_message('Temp {0:0.1f}C  Humid {1:0.1f}%'.format(temperature, humidity))
 
-        operation += 1
+    elif operation == 4:
+        temp_C, temp_F = getCPUtemperature()
+        show_message("CPU {}C / {}F".format(temp_C, temp_F))
 
     else:
         operation = 0
