@@ -162,18 +162,21 @@ while True:
 
                 if not pinger.value:
                     status = "DOWN"
+                    emoji = ":-("
                     blue_led.blink()
                 else:
                     response = requests.get('http://{}'.format(server))
                     page = response.text
                     if page.find(match) > -1:
                         status = "OK"
+                        emoji = ":-)"
                         blue_led.off()
                     else:
                         status = "DOWN"
                         blue_led.blink()
+                        emoji = ":-("
 
-                show_message("Server scrape - {} - {}".format(server, status), operation)
+                show_message("Server scrape - {} - {} {}".format(server, status, emoji), operation)
 
                 for i in range(0, ping_delay):
                     if operation == 7:
