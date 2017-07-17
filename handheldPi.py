@@ -93,9 +93,11 @@ button.when_held = shutdown
 # When low battery alert goes high, trigger the shutdown
 low_battery.when_pressed = shutdown
 
-operation = 6
+operation = 0
 
 while True:
+    blue_led.on()
+
     if operation == 0:
         hostname = socket.gethostname()
         show_message(hostname, operation)
@@ -123,7 +125,8 @@ while True:
         show_message('Wifi Networks', operation)
         cells = scanForCells()
         for cell in cells:
-            show_message(cell.summary, operation)
+            if operation == 5:
+                show_message(cell.summary, operation)
 
     elif operation == 6:
         blue_led.off()
