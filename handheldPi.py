@@ -8,6 +8,7 @@ import Adafruit_DHT
 from gpiozero import LED, Button, CPUTemperature, PingServer
 from wifi import Cell, Scheme
 from wireless import Wireless
+import requests
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = AlphaNum4.AlphaNum4()
@@ -19,8 +20,12 @@ button = Button(11)
 low_battery = Button(10)
 
 message_speed = 0.2
+ping_delay = 5
 
-hosts_to_monitor = ['www.thecasecentre.org','admin.thecasecentre.org']
+hosts_to_monitor = [
+    ['www.thecasecentre.org','case method'],
+    ['admin.thecasecentre.org', 'admin site']
+]
 
 wireless = Wireless()
 
@@ -110,7 +115,8 @@ while True:
         ip_addresses = readIPaddresses()
 
         for addr in ip_addresses:
-            show_message(addr, operation)
+            if operation == 2:
+                show_message(addr, operation)
 
     elif operation == 3:
         # DHT11 on pin 23
@@ -131,19 +137,47 @@ while True:
     elif operation == 6:
         blue_led.off()
         for host in hosts_to_monitor:
-            pinger = PingServer(host)
-            if pinger.value:
-                status = "UP"
-                blue_led.on()
-            else:
-                status = "DOWN"
-                blue_led.blink()
+            if operation == 6:
+                server, match = host
+                pinger = PingServer(server)
+                if pinger.value:
+                    status = "UP"
+                    blue_led.off()
+                else:
+                    status = "DOWN"
+                    blue_led.blink()
 
-            show_message("Ping to {} - {}".format(host, status), operation)
+                show_message("Ping to {} - {}".format(server, status), operation)
 
-            for i in range(0,20):
-                if operation == 6:
-                    time.sleep(1)
+                for i in range(0,ping_delay):
+                    if operation == 6:
+                        time.sleep(1)
+
+    elif operation == 7:
+        blue_led.off()
+        for host in hosts_to_monitor:
+            if operation == 7:
+                server, match = host
+                pinger = PingServer(server)
+
+                if not pinger.value:
+                    status = "DOWN"
+                    blue_led.blink()
+                else:
+                    response = requests.get('http://{}'.format(server))
+                    page = response.text
+                    if page.find(match) > -1:
+                        status = "OK"
+                        blue_led.off()
+                    else:
+                        status = "DOWN"
+                        blue_led.blink()
+
+                show_message("Server scrape - {} - {}".format(server, status), operation)
+
+                for i in range(0, ping_delay):
+                    if operation == 7:
+                        time.sleep(1)
 
     else:
         operation = 0
