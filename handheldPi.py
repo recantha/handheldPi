@@ -5,9 +5,9 @@ import math
 import commands
 import os
 import Adafruit_DHT
-from wireless import Wireless
-
 from gpiozero import LED, Button
+from wifi import Cell, Scheme
+from wireless import Wireless
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = AlphaNum4.AlphaNum4()
@@ -17,6 +17,8 @@ display.begin()
 blue_led = LED(24)
 button = Button(11)
 low_battery = Button(10)
+
+message_speed = 0.2
 
 wireless = Wireless()
 
@@ -32,7 +34,7 @@ def show_message(message):
         display.write_display()
         pos += 1
 
-        time.sleep(0.3)
+        time.sleep(message_speed)
 
     display.clear()
 
@@ -62,14 +64,29 @@ def increaseOperation():
     global operation
     operation += 1
 
-# Start conditions
-operation = 0
+def scanForCells():
+    cells = Cell.all('wlan0')
 
+    for cell in cells:
+        cell.summary = 'SSID {} / Qual {}'.format(cell.ssid, cell.quality)
+
+        if cell.encrypted:
+            enc_yes_no = '*'
+        else:
+            enc_yes_no = '()'
+
+        cell.summary = cell.summary + ' / Enc {}'.format(enc_yes_no)
+
+    return cells
+
+# Start conditions
 blue_led.on()
-hold_time = 5
 button.when_pressed = increaseOperation
+button.hold_time = 5
 button.when_held = shutdown
 low_battery.when_pressed = shutdown
+
+operation = 0
 
 while True:
     if operation == 0:
@@ -94,6 +111,12 @@ while True:
     elif operation == 4:
         temp_C, temp_F = getCPUtemperature()
         show_message("CPU {}C / {}F".format(temp_C, temp_F))
+
+    elif operation == 5:
+        show_message('Wifi Networks')
+        cells = scanForCells()
+        for cell in cells:
+            show_message(cell.summary)
 
     else:
         operation = 0

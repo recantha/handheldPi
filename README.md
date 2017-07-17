@@ -6,4 +6,4 @@ Code for a handheld device which reads the temperature and humidity
 * https://github.com/adafruit/Adafruit_LED_Backpack
 * https://github.com/adafruit/Adafruit_Python_DHT
 * sudo pip install wireless
-* sudo pip install scapy
+* sudo pip install wifi
