@@ -10,7 +10,8 @@ Code for a handheld device with various functions.
 * Displays temperature and humidity from attached DHT11 sensor
 * Displays current CPU temperature in Celsius and Fahrenheit
 * Scans for and displays all local wifi networks, their signal quality and whether they're encrypted or not
-* Pings two servers to see if they are up and displays their status
+* Pings two servers to see if they are up and displays their status - Up/Down indicator 1
+* Web-scrapes the same two servers to see if matching text is found - Up/Down indicator 2
 
 # Libraries to install
 * GPIO Zero (comes with Raspbian)
@@ -18,3 +19,5 @@ Code for a handheld device with various functions.
 * https://github.com/adafruit/Adafruit_Python_DHT
 * sudo pip install wireless
 * sudo pip install wifi
+* sudo pip install requests
+
