@@ -20,11 +20,12 @@ button = Button(11)
 low_battery = Button(10)
 
 message_speed = 0.2
-ping_delay = 5
+ping_delay = 3
 
 hosts_to_monitor = [
-    ['www.thecasecentre.org','case method'],
-    ['admin.thecasecentre.org', 'admin site']
+    ['WWW', 'www.thecasecentre.org','case method'],
+    ['ADMIN', 'admin.thecasecentre.org', 'admin site'],
+    ['RECANTHA', 'recantha.co.uk', 'Raspberry Pi Pod']
 ]
 
 wireless = Wireless()
@@ -55,7 +56,7 @@ def readIPaddresses():
 
 def shutdown():
     print("Shutdown requested")
-    show_message("Shutdown")
+    show_message("Shutdown", 0)
     display.clear()
     blue_led.off()
     os.system("sudo halt")
@@ -138,7 +139,7 @@ while True:
         blue_led.off()
         for host in hosts_to_monitor:
             if operation == 6:
-                server, match = host
+                nickname, server, match = host
                 pinger = PingServer(server)
                 if pinger.value:
                     status = "UP"
@@ -157,14 +158,20 @@ while True:
         blue_led.off()
         for host in hosts_to_monitor:
             if operation == 7:
-                server, match = host
+                nickname, server, match = host
+
+                show_message("Ping {}".format(nickname), operation)
+
                 pinger = PingServer(server)
 
                 if not pinger.value:
                     status = "DOWN"
                     emoji = ":-("
                     blue_led.blink()
+
                 else:
+                    show_message("Scrape {}".format(nickname), operation)
+
                     response = requests.get('http://{}'.format(server))
                     page = response.text
                     if page.find(match) > -1:
@@ -176,7 +183,7 @@ while True:
                         blue_led.blink()
                         emoji = ":-("
 
-                show_message("Server scrape - {} - {} {}".format(server, status, emoji), operation)
+                show_message("Status {} - {}".format(nickname, status), operation)
 
                 for i in range(0, ping_delay):
                     if operation == 7:
