@@ -11,6 +11,7 @@ from wireless import Wireless
 import requests
 import threading
 import sqlite3 as sqlite
+from ISStreamer.Streamer import Streamer
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = AlphaNum4.AlphaNum4()
@@ -98,6 +99,7 @@ class readingsThread(threading.Thread):
     
     def run(self):
         try:
+            streamer = Streamer(bucket_name="HandheldPi Stream", access_key="y8ZCpNZ5ZYQQLfU5zKqdZrSEyizKFc17")
             con = sqlite.connect('handheldPi.db')
             while True:
                 cur = con.cursor()
@@ -105,6 +107,10 @@ class readingsThread(threading.Thread):
                 cur.execute("INSERT INTO readings (reading_date, reading_time, reading_type, value) VALUES (date('now'), time('now'), 'temperature', ?)", (temperature,))
                 cur.execute("INSERT INTO readings (reading_date, reading_time, reading_type, value) VALUES (date('now'), time('now'), 'humidity', ?)", (humidity,))
                 con.commit()
+
+                streamer.log("Temperature", temperature)
+                streamer.log("Humidity", humidity)
+
                 time.sleep(5)
 
         except sqlite.Error, e:
