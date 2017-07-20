@@ -103,6 +103,7 @@ class readingsThread(threading.Thread):
                 cur = con.cursor()
                 humidity, temperature = Adafruit_DHT.read_retry(11, 23)
                 cur.execute("INSERT INTO readings (reading_date, reading_time, reading_type, value) VALUES (date('now'), time('now'), 'temperature', ?)", (temperature,))
+                cur.execute("INSERT INTO readings (reading_date, reading_time, reading_type, value) VALUES (date('now'), time('now'), 'humidity', ?)", (humidity,))
                 con.commit()
                 time.sleep(5)
 
