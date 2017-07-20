@@ -223,4 +223,6 @@ try:
             operation = 0
 
 except:
+    print("Exiting")
     thread1.join()
+    sys.exit()
