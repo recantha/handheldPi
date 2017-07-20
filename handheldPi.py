@@ -130,93 +130,97 @@ low_battery.when_pressed = shutdown
 
 operation = 0
 
-while True:
-    blue_led.on()
+try:
+    while True:
+        blue_led.on()
 
-    if operation == 0:
-        hostname = socket.gethostname()
-        show_message(hostname, operation)
+        if operation == 0:
+            hostname = socket.gethostname()
+            show_message(hostname, operation)
 
-    elif operation == 1:
-        current_ap = wireless.current()
-        show_message("Connected to %s" % current_ap, operation)
+        elif operation == 1:
+            current_ap = wireless.current()
+            show_message("Connected to %s" % current_ap, operation)
 
-    elif operation == 2:
-        ip_addresses = readIPaddresses()
+        elif operation == 2:
+            ip_addresses = readIPaddresses()
 
-        for addr in ip_addresses:
-            if operation == 2:
-                show_message(addr, operation)
+            for addr in ip_addresses:
+                if operation == 2:
+                    show_message(addr, operation)
 
-    elif operation == 3:
-        # DHT11 on pin 23
-        humidity, temperature = Adafruit_DHT.read_retry(11, 23)
-        show_message('Temp {0:0.1f}C  Humid {1:0.1f}%'.format(temperature, humidity), operation)
+        elif operation == 3:
+            # DHT11 on pin 23
+            humidity, temperature = Adafruit_DHT.read_retry(11, 23)
+            show_message('Temp {0:0.1f}C  Humid {1:0.1f}%'.format(temperature, humidity), operation)
 
-    elif operation == 4:
-        temp_C, temp_F = getCPUtemperature()
-        show_message("CPU {}C / {}F".format(temp_C, temp_F), operation)
+        elif operation == 4:
+            temp_C, temp_F = getCPUtemperature()
+            show_message("CPU {}C / {}F".format(temp_C, temp_F), operation)
 
-    elif operation == 5:
-        show_message('Wifi Networks', operation)
-        cells = scanForCells()
-        for cell in cells:
-            if operation == 5:
-                show_message(cell.summary, operation)
+        elif operation == 5:
+            show_message('Wifi Networks', operation)
+            cells = scanForCells()
+            for cell in cells:
+                if operation == 5:
+                    show_message(cell.summary, operation)
 
-    elif operation == 6:
-        blue_led.off()
-        for host in hosts_to_monitor:
-            if operation == 6:
-                nickname, server, match = host
-                pinger = PingServer(server)
-                if pinger.value:
-                    status = "UP"
-                    blue_led.off()
-                else:
-                    status = "DOWN"
-                    blue_led.blink()
-
-                show_message("Ping to {} - {}".format(server, status), operation)
-
-                for i in range(0,ping_delay):
-                    if operation == 6:
-                        time.sleep(1)
-
-    elif operation == 7:
-        blue_led.off()
-        for host in hosts_to_monitor:
-            if operation == 7:
-                nickname, server, match = host
-
-                show_message("Ping {}".format(nickname), operation)
-
-                pinger = PingServer(server)
-
-                if not pinger.value:
-                    status = "DOWN"
-                    emoji = ":-("
-                    blue_led.blink()
-
-                else:
-                    show_message("Scrape {}".format(nickname), operation)
-
-                    response = requests.get('http://{}'.format(server))
-                    page = response.text
-                    if page.find(match) > -1:
-                        status = "OK"
-                        emoji = ":-)"
+        elif operation == 6:
+            blue_led.off()
+            for host in hosts_to_monitor:
+                if operation == 6:
+                    nickname, server, match = host
+                    pinger = PingServer(server)
+                    if pinger.value:
+                        status = "UP"
                         blue_led.off()
                     else:
                         status = "DOWN"
                         blue_led.blink()
+
+                    show_message("Ping to {} - {}".format(server, status), operation)
+
+                    for i in range(0,ping_delay):
+                        if operation == 6:
+                            time.sleep(1)
+
+        elif operation == 7:
+            blue_led.off()
+            for host in hosts_to_monitor:
+                if operation == 7:
+                    nickname, server, match = host
+
+                    show_message("Ping {}".format(nickname), operation)
+
+                    pinger = PingServer(server)
+
+                    if not pinger.value:
+                        status = "DOWN"
                         emoji = ":-("
+                        blue_led.blink()
 
-                show_message("Status {} - {}".format(nickname, status), operation)
+                    else:
+                        show_message("Scrape {}".format(nickname), operation)
 
-                for i in range(0, ping_delay):
-                    if operation == 7:
-                        time.sleep(1)
+                        response = requests.get('http://{}'.format(server))
+                        page = response.text
+                        if page.find(match) > -1:
+                            status = "OK"
+                            emoji = ":-)"
+                            blue_led.off()
+                        else:
+                            status = "DOWN"
+                            blue_led.blink()
+                            emoji = ":-("
 
-    else:
-        operation = 0
+                    show_message("Status {} - {}".format(nickname, status), operation)
+
+                    for i in range(0, ping_delay):
+                        if operation == 7:
+                            time.sleep(1)
+
+        else:
+            operation = 0
+
+except:
+    thread1.join()
