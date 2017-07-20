@@ -9,6 +9,8 @@ from gpiozero import LED, Button, CPUTemperature, PingServer
 from wifi import Cell, Scheme
 from wireless import Wireless
 import requests
+import threading
+import sqlite3 as sqlite
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = AlphaNum4.AlphaNum4()
@@ -87,6 +89,33 @@ def scanForCells():
         cell.summary = cell.summary + ' / Enc {}'.format(enc_yes_no)
 
     return cells
+
+class readingsThread(threading.Thread):
+    def __init__(self, threadID, name):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+    
+    def run(self):
+        try:
+            con = sqlite.connect('handheldPi.db')
+            while True:
+                cur = con.cursor()
+                humidity, temperature = Adafruit_DHT.read_retry(11, 23)
+                cur.execute("INSERT INTO readings (reading_date, reading_time, reading_type, value) VALUES (date('now'), time('now'), 'temperature', ?)", (temperature,))
+                con.commit()
+                time.sleep(5)
+
+        except sqlite.Error, e:
+            if con:
+                con.rollback()
+
+            print("Error %s:" % e.args[0])
+            con.close()
+            sys.exit()
+
+thread1 = readingsThread(1, "readings")
+thread1.start()
 
 # Start conditions
 # Turn the blue LED on
