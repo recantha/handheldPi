@@ -2,6 +2,7 @@ import time
 from Adafruit_LED_Backpack import AlphaNum4
 import socket
 import math
+import datetime
 import commands
 import os
 import Adafruit_DHT
@@ -12,6 +13,7 @@ import requests
 import threading
 import sqlite3 as sqlite
 from ISStreamer.Streamer import Streamer
+import sys
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = AlphaNum4.AlphaNum4()
@@ -92,15 +94,17 @@ def scanForCells():
     return cells
 
 class readingsThread(threading.Thread):
-    def __init__(self, threadID, name):
+    def __init__(self, threadID, name, logger):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
+        self.logger = logger
     
     def run(self):
+        self.logger.write("readingsThread started")
         try:
             streamer = Streamer(bucket_name="HandheldPi Stream", access_key="y8ZCpNZ5ZYQQLfU5zKqdZrSEyizKFc17")
-            con = sqlite.connect('handheldPi.db')
+            con = sqlite.connect('/home/pi/handheldPi/handheldPi.db')
             while True:
                 cur = con.cursor()
                 humidity, temperature = Adafruit_DHT.read_retry(11, 23)
@@ -118,10 +122,24 @@ class readingsThread(threading.Thread):
                 con.rollback()
 
             print("Error %s:" % e.args[0])
+            self.logger.write("Error %s:" % e.args[0])
             con.close()
-            sys.exit()
+            exit(1)
 
-thread1 = readingsThread(1, "readings")
+class Logger(object):
+    def __init__(self, filename='/home/pi/handheldPi/handheldPi.log'):
+        self.filename = filename
+
+    def write(self, message):
+        log = open(self.filename, "a")
+        timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
+        log.write('{} {}\n'.format(timestamp, message))
+        log.close()
+
+logger = Logger()
+logger.write("Handheld Pi start-up")
+
+thread1 = readingsThread(1, "readings", logger)
 thread1.start()
 
 # Start conditions
@@ -231,5 +249,6 @@ try:
 
 except:
     print("Exiting")
+    logger.write("Handheld Pi shutdown")
     thread1.join()
-    sys.exit()
+    exit(1)
